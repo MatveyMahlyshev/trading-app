@@ -4,11 +4,9 @@ WORKDIR /trading
 
 EXPOSE 8000
 
-COPY requirements.txt /trading/requirements.txt
+COPY /trading/requirements.txt /trading/requirements.txt
 
 COPY trading /trading
-
-RUN apk add postgresql-client build-base postgresql-dev
 
 RUN pip install --no-cache-dir -r /trading/requirements.txt
 

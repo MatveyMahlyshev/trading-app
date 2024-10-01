@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   web-app:
     build:
@@ -13,14 +15,19 @@ services:
     volumes:
       - ./trading:/trading
     command: "uvicorn main:app --reload --host 0.0.0.0 --port 8000"
-
     depends_on:
       - database
-  
 
   database:
     image: postgres:16.4-alpine3.20
     environment:
-      - POSTGRES_DB=dbname
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=dbname
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
