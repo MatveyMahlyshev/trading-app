@@ -1,4 +1,8 @@
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
 from fastapi import FastAPI
+from pydantic import BaseModel, Field
 
 app = FastAPI(
     title="Trading App"
@@ -9,16 +13,9 @@ fake_users = [
     {"id": 2, "name": "Bob", "email": "bob@example.com"},
     {"id": 3, "name": "Charlie", "email": "charlie@example.com"},
     {"id": 4, "name": "David", "email": "david@example.com"},
-    {"id": 5, "name": "Eve", "email": "eve@example.com"}
-]
-
-
-fake_users2 = [
-    {"id": 1, "name": "Alice", "email": "alice@example.com"},
-    {"id": 2, "name": "Bob", "email": "bob@example.com"},
-    {"id": 3, "name": "Charlie", "email": "charlie@example.com"},
-    {"id": 4, "name": "David", "email": "david@example.com"},
-    {"id": 5, "name": "Eve", "email": "eve@example.com"}
+    {"id": 5, "name": "Eve", "email": "eve@example.com", "degree": [
+        {"id": 1, "created_at": "2024-01-01T00:00:00", "type_degree": "expert"}
+    ]},
 ]
 
 fake_trades = [
@@ -64,19 +61,38 @@ fake_trades = [
     }
 ]
 
+class DegreeType(Enum):
+    newbie = "newbie"
+    expert = "expert"
 
-@app.get("/users/{user_id}")
+class Degree(BaseModel):
+    id: int
+    created_at: datetime
+    type_degree: DegreeType
+
+class Trade(BaseModel):
+    id: int
+    user_id: int
+    currency: str = Field(min_length=3)
+    side: str
+    price: float = Field(ge=0)
+    amount: float
+
+
+class User(BaseModel):
+    id: int
+    name: str 
+    email: str 
+    degree: Optional[List[Degree]] = []
+
+@app.get("/users/{user_id}", response_model=List[User])
 def get_user(user_id: int):
     return [user for user in fake_users if user.get("id") == user_id]
 
 
-@app.get("/trades")
-def get_trades(limit: int = 1, offset: int = 1):
-    return fake_trades[offset:offset + limit]
 
-@app.post("/users/{user_id}")
-def change_user_name(user_id: int, new_name: str):
-    updated_user = list(filter(lambda user: user.get("id") == user_id, fake_users2))
-    updated_user[0]["name"] = new_name
-    return {"code": 200, "data": updated_user}
 
+@app.post("/trades")
+def add_trades(trades: List[Trade]):
+    fake_trades.extend(trades)
+    return {"status": 200, "data": fake_trades}
